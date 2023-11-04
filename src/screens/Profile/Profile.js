@@ -7,17 +7,19 @@ import {
   View,
 } from 'react-native';
 import Header from '../../components/header';
+import { useSelector } from 'react-redux';
 
 const WIDTH = Dimensions.get('window').width;
 const HEIGHT = Dimensions.get('window').height;
 
 const Perfil = () => {
+  const userEmail = useSelector((state) => state.userEmail);
 
   return (
     <SafeAreaView style = {styles.container}>
       <Header/>
       <View style = {{...styles.gridRow, flexDirection:'row'}}>
-        <Text style = {{fontSize:20}}>Perfil</Text>
+        <Text style = {{fontSize:20}}>Usted esta logueado desde: {userEmail} </Text>
       </View>
     </SafeAreaView>
   );

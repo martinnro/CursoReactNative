@@ -1,19 +1,33 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   SafeAreaView,
   Dimensions,
   StyleSheet,
   Text,
   View,
-  TouchableOpacity
+  TouchableOpacity,
+  FlatList
 } from 'react-native';
 import Header from '../../components/header';
 import { Icon } from '@rneui/themed'
+import { getPokemon } from '../../api';
 
 const WIDTH = Dimensions.get('window').width;
 const HEIGHT = Dimensions.get('window').height;
 
 const Detalle = (props) => {
+    const {url} = props.route.params.item
+    const [abilities, setAbilities] = useState([]);
+    useEffect(()=>{
+        getPokemonDetail()
+    }, [props])
+    
+    getPokemonDetail = () => {
+        getPokemon(url).then(data =>{
+            console.log(data.abilities)
+            setAbilities(data.abilities)
+        })
+    }
 
   return (
     <SafeAreaView style = {styles.container}>
@@ -28,7 +42,12 @@ const Detalle = (props) => {
             </View>
       )} />
       <View style = {{...styles.gridRow, flexDirection:'row'}}>
-        <Text style = {{fontSize:20}}>Detalle</Text>
+        <Text style = {{fontSize:20}}> 
+        Abilities: 
+        {abilities.map((ability, index) => (
+            <Text key= {index}> {ability.ability.name} </Text>
+        ))} 
+        </Text>
       </View>
     </SafeAreaView>
   );

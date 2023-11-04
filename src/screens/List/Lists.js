@@ -1,69 +1,158 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  SafeAreaView,
-  Dimensions,
-  StyleSheet,
-  Text,
-  View,
-  Pressable
+RefreshControl,
+View,
+Dimensions,
+ActivityIndicator,
+FlatList,
+TouchableOpacity,
+StyleSheet
 } from 'react-native';
-import Header from '../../components/header';
+import { Text, Avatar, Button, Icon, ListItem } from '@rneui/themed';
+import Header from '../../components/header'
+import { getPokemonList, IMG_URL} from '../../api'
 
-const WIDTH = Dimensions.get('window').width;
-const HEIGHT = Dimensions.get('window').height;
+const width = Dimensions.get('window').width;
+const height = Dimensions.get('window').height;
 
-const Listas = (props) => {
-
-    const HandlePress = () => {
-        console.log('Hola desde ListDetail')
-        props.navigation.navigate("ListDetail")
-    }
-
-  return (
-    <SafeAreaView style = {styles.container}>
-      <Header/>
-      <View style = {{...styles.gridRow, flexDirection:'row'}}>
-        <Text style = {{fontSize:20}}>Listas</Text>
-        <Pressable style = {{...styles.gridButton, backgroundColor:'rgb(112, 128, 144)'}} onPress={HandlePress}>
-                <Text style = {{...styles.buttonTitle}} >Ir al Detalle</Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
-  );
+const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
 }
 
-const styles = StyleSheet.create({
-    gridColumn: {
-        flex:1,
+export default List = (props) => {
+const [ pokemons, setPokemons ] = useState()
+const [ next, setNext ] = useState()
+const [refreshing, setRefreshing] = useState(false);
+const [loadingMore, setLoadingMore] = useState(false);
+
+
+useEffect(() => {
+    getPokemonList().then(data => {
+        setPokemons(data.results)
+        setNext(data.next)
+    })
+}, [])
+
+const loadMore = () => {
+    setLoadingMore(true)
+    getPokemonList(next).then(data => {
+        setPokemons([...pokemons, ...data.results])
+        setNext(data.next)
+        setLoadingMore(false)
+    })
+}
+
+const getPokemonImgId = (id) => {
+    console.log('long. '+id.length)
+    switch (id.length) {
+    case 1:
+    return `00${id}`
+    case 2:
+    return `0${id}`
+    default:
+    return id
+    }
+}
+
+const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    console.log('refreshing')
+    wait(2000).then(() => setRefreshing(false));
+}, []);
+
+const renderItem = (item) => {
+    const path = item.url.split('/')
+    const imgID = getPokemonImgId(path[6])
+    return(
+    <TouchableOpacity onPress={()=>props.navigation.navigate('ListDetail', item={item})} style={{ marginVertical:'1%', alignItems:'center', justifyContent:'center', borderWidth:0.5, borderColor:'#707070', borderRadius:5}}>
+        <ListItem style={{width}}>
+            <ListItem.Content>
+                <ListItem.Title>{item.name}</ListItem.Title>
+            </ListItem.Content>
+            <Avatar size='large' source={{uri: `${IMG_URL}${imgID}.png`}} />
+        </ListItem>
+    </TouchableOpacity>
+    )
+}
+
+return(
+    <View style={styles.container}>
+        <View style={styles.mainContent}>
+            <Header />
+            <FlatList
+                data={pokemons}
+                bounces={false}
+                renderItem={(item, index)=>renderItem(item.item, index)}
+                keyExtractor={(item, index) => index}
+                style={{marginTop: height/8}}
+                refreshControl={
+                <RefreshControl
+                refreshing={refreshing}
+                onRefresh={()=>onRefresh()}
+                />
+            }
+            ListFooterComponent={
+                loadingMore?
+                (<ActivityIndicator />)
+                :
+                (<Button title='Cargar mas' onPress={()=>loadMore()}/>)
+            }
+            />
+        </View>
+    </View>
+    )
+}
+
+export const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent:'center',
+        alignItems: 'center',
+        width,
+        height,
+    },
+    buttonContent: {
+        width: width/3,
+        height: width/3,
+        margin:10,
+        borderRadius:5,
+        justifyContent:'center',
         alignItems: 'center'
     },
-    gridRow: {
-        flex:1,
-        justifyContent: 'center',
-        alignItems:'center'
+    mainContent: {
+        flex: 1,
+        width,
+        height,
+        flexDirection:'column',
+        justifyContent:'center',
+        alignItems: 'center',
+        backgroundColor: 'white',
     },
-    gridButton: {
-        width: WIDTH*.4,
-        height: WIDTH*.4,
+    rowConten: {
+        flexDirection:'row',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 8,
-        elevation:3
     },
-    buttonTitle: {
-        fontSize: 18,
-        color: 'white',
-        fontWeight:'500',
-        elevation:3
-
-    },
-    container: {
-        flex:1,
-        height:'100%',
+    title: {
         width: '100%',
-        justifyContent: 'center',
-        backgroundColor: 'rgb(220, 220, 220)'
-    }
-});
-
-export default Listas;
+        textAlign: 'center',
+        fontSize:18,
+        fontWeight: 'bold',
+    },
+    fonts: {
+        marginBottom: 8,
+    },
+    user: {
+        flexDirection: 'row',
+        marginBottom: 6,
+    },
+    image: {
+        width: 30,
+        height: 30,
+        marginRight: 10,
+    },
+    name: {
+        fontSize: 16,
+        marginTop: 5,
+    },
+    })
