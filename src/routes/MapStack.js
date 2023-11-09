@@ -1,5 +1,6 @@
 import React,{ Component } from 'react';
 import Maps from '../screens/Map/Maps'
+//import Home from '../screens/Map/Maps'
 import { createStackNavigator } from '@react-navigation/stack';
 
 const MapStack = createStackNavigator();
